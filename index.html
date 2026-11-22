@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Raízes do Nordeste — Peça já</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ============ HEADER ============ -->
+  <header class="topbar">
+    <button class="topbar__brand" data-goto="cardapio" aria-label="Ir para o início (cardápio)">
+      <span class="topbar__mark">RN</span>
+      <span class="topbar__name">Raízes do Nordeste</span>
+    </button>
+    <nav class="topnav" aria-label="Navegação principal">
+      <button class="topnav__item is-active" data-goto="cardapio">Cardápio</button>
+      <button class="topnav__item" data-goto="carrinho">Carrinho<span class="topnav__badge" id="cartBadgeTop" hidden>0</span></button>
+      <button class="topnav__item" data-goto="status">Pedido</button>
+    </nav>
+    <button class="unit-picker" id="unitPicker" aria-haspopup="listbox">
+      <span class="unit-picker__label">Unidade</span>
+      <span class="unit-picker__value" id="unitPickerValue">—</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <button class="profile-btn" id="profileBtn" aria-label="Perfil">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 20c1.8-4 5-6 8-6s6.2 2 8 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+  </header>
+
+  <!-- ============ UNIT MODAL ============ -->
+  <div class="sheet-backdrop" id="unitBackdrop" hidden></div>
+  <div class="sheet" id="unitSheet" hidden>
+    <div class="sheet__handle"></div>
+    <h2 class="sheet__title">Escolher unidade</h2>
+    <p class="sheet__hint">O cardápio muda conforme a unidade — cada loja tem itens e receitas próprias.</p>
+    <ul class="unit-list" id="unitList"></ul>
+  </div>
+
+  <!-- ============ MAIN VIEWS ============ -->
+  <main id="app">
+
+    <!-- ---------- VIEW: CARDÁPIO ---------- -->
+    <section class="view" id="view-cardapio" data-view="cardapio">
+      <div class="view__header">
+        <h1 class="view__title">Cardápio</h1>
+        <div class="search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input type="text" id="searchInput" placeholder="Buscar tapioca, cuscuz, suco..." />
+        </div>
+      </div>
+      <div class="chips" id="categoryChips"></div>
+      <div class="product-list" id="productList"></div>
+    </section>
+
+    <!-- ---------- VIEW: CARRINHO ---------- -->
+    <section class="view" id="view-carrinho" data-view="carrinho" hidden>
+      <div class="view__header">
+        <h1 class="view__title">Seu pedido</h1>
+      </div>
+      <div id="cartEmpty" class="empty-state" hidden>
+        <p>Seu carrinho está vazio.</p>
+        <button class="btn btn--ghost" data-goto="cardapio">Ver cardápio</button>
+      </div>
+      <div id="cartContent">
+        <ul class="cart-list" id="cartList"></ul>
+
+        <div class="field-block">
+          <label class="field-label" for="couponInput">Cupom ou pontos de fidelidade</label>
+          <div class="coupon-row">
+            <input type="text" id="couponInput" placeholder="Ex.: BEMVINDO10" />
+            <button class="btn btn--outline" id="applyCoupon">Aplicar</button>
+          </div>
+          <p class="field-note" id="couponNote"></p>
+        </div>
+
+        <div class="lgpd-block">
+          <strong>Sobre os seus dados</strong>
+          <p>Usamos seu nome, telefone e histórico de pedidos apenas para preparar seu pedido e, se você permitir, para o programa de fidelidade. Você pode revogar isso a qualquer momento em "Perfil".</p>
+          <label class="checkbox">
+            <input type="checkbox" id="lgpdConsent" />
+            <span>Aceito o uso dos meus dados para fidelidade e ofertas personalizadas (opcional)</span>
+          </label>
+          <label class="checkbox">
+            <input type="checkbox" id="termsConsent" />
+            <span>Li e concordo com os <a href="#" id="openPrivacy">Termos de Uso e a Política de Privacidade</a> (obrigatório)</span>
+          </label>
+        </div>
+
+        <div class="field-block">
+          <label class="field-label">Identificação</label>
+          <div class="identify-row" id="identifyRow"></div>
+        </div>
+
+        <div class="field-block">
+          <label class="field-label">Retirada</label>
+          <div class="pickup-row" id="pickupRow"></div>
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-line"><span>Subtotal</span><span id="sumSubtotal">R$ 0,00</span></div>
+          <div class="summary-line" id="sumDiscountLine" hidden><span>Desconto</span><span id="sumDiscount">- R$ 0,00</span></div>
+          <div class="summary-line summary-line--total"><span>Total</span><span id="sumTotal">R$ 0,00</span></div>
+        </div>
+
+        <button class="btn btn--primary btn--block" id="goToPaymentBtn">Ir para pagamento</button>
+      </div>
+    </section>
+
+    <!-- ---------- VIEW: PAGAMENTO ---------- -->
+    <section class="view" id="view-pagamento" data-view="pagamento" hidden>
+      <div class="view__header view__header--back">
+        <button class="back-btn" data-goto="carrinho" aria-label="Voltar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <h1 class="view__title">Pagamento</h1>
+      </div>
+
+      <p class="pay-info">O pagamento é processado por um serviço externo especializado. O sistema apenas solicita a cobrança e recebe a confirmação — nenhum dado de cartão é armazenado aqui.</p>
+
+      <div class="pay-methods" id="payMethods"></div>
+
+      <div class="summary-card">
+        <div class="summary-line summary-line--total"><span>Total a pagar</span><span id="payTotal">R$ 0,00</span></div>
+      </div>
+
+      <button class="btn btn--primary btn--block" id="confirmPaymentBtn">Confirmar pagamento</button>
+
+      <!-- Estado: processando -->
+      <div class="pay-state" id="payProcessing" hidden>
+        <div class="spinner"></div>
+        <p>Enviando solicitação ao serviço de pagamento externo...</p>
+      </div>
+    </section>
+
+    <!-- ---------- VIEW: STATUS DO PEDIDO ---------- -->
+    <section class="view" id="view-status" data-view="status" hidden>
+      <div class="view__header">
+        <h1 class="view__title">Pedido <span id="orderNumber">#0000</span></h1>
+      </div>
+
+      <div class="status-banner" id="statusBanner">Pagamento aprovado</div>
+
+      <ol class="timeline" id="timeline">
+        <li class="timeline__step" data-step="recebido"><span class="timeline__dot"></span><span class="timeline__label">Recebido</span></li>
+        <li class="timeline__step" data-step="preparo"><span class="timeline__dot"></span><span class="timeline__label">Em preparo na cozinha</span></li>
+        <li class="timeline__step" data-step="pronto"><span class="timeline__dot"></span><span class="timeline__label">Pronto para retirada</span></li>
+      </ol>
+
+      <div class="summary-card">
+        <div class="summary-line"><span>Unidade</span><span id="statusUnit">—</span></div>
+        <div class="summary-line"><span>Tempo estimado</span><span id="statusEta">—</span></div>
+      </div>
+
+      <div class="points-card" id="pointsEarned" hidden>
+        Você ganhou <strong id="pointsAmount">0</strong> pontos de fidelidade neste pedido!
+      </div>
+
+      <button class="btn btn--ghost btn--block" data-goto="cardapio">Fazer novo pedido</button>
+    </section>
+
+    <!-- ---------- VIEW: PERFIL ---------- -->
+    <section class="view" id="view-perfil" data-view="perfil" hidden>
+      <div class="view__header">
+        <h1 class="view__title">Perfil</h1>
+      </div>
+      <div id="perfilLogged" hidden>
+        <div class="profile-card">
+          <div class="profile-avatar" id="profileAvatar">—</div>
+          <div>
+            <p class="profile-name" id="profileName">—</p>
+            <p class="profile-email" id="profileEmail">—</p>
+          </div>
+        </div>
+        <div class="points-card points-card--big">
+          <span>Pontos de fidelidade</span>
+          <strong id="profilePoints">0</strong>
+        </div>
+        <div class="field-block">
+          <label class="checkbox">
+            <input type="checkbox" id="lgpdConsentProfile" />
+            <span>Permitir uso dos meus dados para fidelidade e ofertas personalizadas</span>
+          </label>
+        </div>
+        <button class="btn btn--outline btn--block" id="logoutBtn">Sair da conta</button>
+      </div>
+      <div id="perfilGuest">
+        <p class="empty-state__text">Você ainda não entrou com uma conta.</p>
+        <form class="login-form" id="loginForm">
+          <label class="field-label" for="loginName">Nome</label>
+          <input type="text" id="loginName" placeholder="Seu nome" required />
+          <label class="field-label" for="loginEmail">E-mail</label>
+          <input type="email" id="loginEmail" placeholder="voce@email.com" required />
+          <button type="submit" class="btn btn--primary btn--block">Entrar / Cadastrar</button>
+          <p class="field-note">Cadastro simulado — apenas para fins de demonstração do fluxo.</p>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============ BOTTOM NAV ============ -->
+  <nav class="tabbar" id="tabbar">
+    <button class="tabbar__item is-active" data-goto="cardapio">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 4h16v4H4z" stroke="currentColor" stroke-width="1.7"/><path d="M4 12h16M4 16h10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      <span>Cardápio</span>
+    </button>
+    <button class="tabbar__item" data-goto="carrinho">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 4h2l2.2 11.4a2 2 0 002 1.6h7.6a2 2 0 002-1.6L20 8H6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="20" r="1.4" fill="currentColor"/><circle cx="17" cy="20" r="1.4" fill="currentColor"/></svg>
+      <span>Carrinho</span>
+      <span class="tabbar__badge" id="cartBadge" hidden>0</span>
+    </button>
+    <button class="tabbar__item" data-goto="status">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      <span>Pedido</span>
+    </button>
+    <button class="tabbar__item" data-goto="perfil">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.7"/><path d="M5 20c1.5-3.6 4.3-5.4 7-5.4s5.5 1.8 7 5.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      <span>Perfil</span>
+    </button>
+  </nav>
+
+  <!-- Toast genérico -->
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
